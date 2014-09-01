@@ -27,7 +27,12 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.006"
+            "Carp" : "0",
+            "DBI" : "0",
+            "PGObject::Util::Catalog::Types" : "0",
+            "PGObject::Util::PseudoCSV" : "0",
+            "Scalar::Util" : "0",
+            "perl" : "5.008"
          }
       }
    },
@@ -39,5 +44,5 @@
          "web" : "https://github.com/ledgersmb/PGObject-Type-Composite"
       }
    },
-   "version" : "0.01"
+   "version" : "0.02"
 }
