@@ -12,11 +12,11 @@ PGObject::Type::Composite - Composite Type handler for PGObject
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 
 =head1 SYNOPSIS
@@ -61,24 +61,6 @@ deserialized into MyObject.
 
 =cut
 
-sub _process {
-    my ($att) = @_;
-    my $is_array;
-    if (ref $att){ # try to serialize
-        if (eval {$att->can('to_db')}){  # has serialization method
-           $att = $att->to_db;
-        } elsif (ref $att =~ /ARRAY/){
-           $att = '{' . join(',', map {_process($_)} @$att) . '}';
-        } else { # last resort, stringify and hope for the best
-           $att = "$att";
-        }
-    }
-    # escaping
-    $att =~ s/([\\"])/$1/g;
-    $att = qq("$att") if $att =~ /[,\\"{}]/;
-    return $att;
-}
-
 sub import {
     my ($importer) = caller;
     my @cols;
@@ -103,12 +85,16 @@ sub import {
 
     my $from_db = sub {
         my ($to_pkg, $string) = @_;
-        my $hashref = PGObject::Util::PseudoCSV::pseudocsv_tohash(
-                         [pseudocsv_parse(
-                            $string, [map { $_->{atttype}} @cols]
-                         )],
-                         [map {$_->{attname}} @cols]
-        );
+        my $hashref = pcsv2hash($string, map { $_->{attname}} @cols);
+        $hashref = {
+             map { $_->{attname} => PGObject::process_type(
+                                      $hashref->{$_->{attname}}, 
+                                      $_->{atttype},
+                                      (eval {$to_pkg->can('_get_registry')} ?
+                                            "$to_pkg"->_get_registry        :
+                                            'default'))
+                  } @cols
+        };
         if ($can_has){ # moo/moose
            return "$pkg"->new(%$hashref);
         } else {
@@ -125,9 +111,7 @@ sub import {
                       } @cols };
         return { 
             type  => $typename,
-            value => '(' . 
-                    join(',', map {_process($hashref->{"$_->{attname}"})} @cols)
-                    . ')' 
+            value => hash2pcsv($hashref, map {$_->{attname}} @cols),
          };
     };
 

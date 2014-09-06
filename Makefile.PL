@@ -19,7 +19,7 @@ WriteMakefile(
     },
     PREREQ_PM => {
         DBI                              => 0,
-        'PGObject::Util::PseudoCSV'      => 0,
+        'PGObject::Util::PseudoCSV'      => '1.1.0',
         'PGObject::Util::Catalog::Types' => 0,
         'Carp'                           => 0,
         'Scalar::Util'                   => 0,
