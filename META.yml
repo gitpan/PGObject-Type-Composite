@@ -24,4 +24,4 @@ requires:
   perl: 5.008
 resources:
   repository: https://github.com/ledgersmb/PGObject-Type-Composite.git
-version: 0.03
+version: 0.04
